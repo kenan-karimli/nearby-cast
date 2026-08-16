@@ -78,5 +78,6 @@ Thumbs.db
 *.key
 **/secrets*
 
-# Stale local binaries — ship releases via GitHub Releases instead
+# Stale local binaries — ship via GitHub Releases, not git
 dist_pkg/nearby-cast-bin
+packaging/release/

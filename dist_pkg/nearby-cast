@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
-# Nearby Cast launcher
-
+# Nearby Cast launcher — production binary embeds the UI.
+set -euo pipefail
 SHARE_DIR=/usr/share/nearby-cast
-export CAST_LAUNCHER="$SHARE_DIR/cast_launcher.py"
-
-# Serve frontend assets on 1420 if server is not active
-if ! fuser 1420/tcp >/dev/null 2>&1; then
-    python3 -m http.server 1420 --directory "$SHARE_DIR/dist" --bind 127.0.0.1 >/dev/null 2>&1 &
-    sleep 0.3
-fi
-
+export CAST_LAUNCHER="${CAST_LAUNCHER:-$SHARE_DIR/cast_launcher.py}"
 exec /usr/local/bin/nearby-cast-bin "$@"
