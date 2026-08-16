@@ -2,14 +2,13 @@
 """
 Nearby Cast — Direct Capture Streaming Launcher
 
-Confirmed working pipeline (default):
+Pipeline:
   wf-recorder --muxer=rawvideo -c rawvideo -x bgr0 -f pipe
-  | ffmpeg -> low-latency H.264 fragmented MP4
-  | HTTP/1.0 growing-file stream (no Content-Length)
-  | Google Cast Default Media Receiver (PLAYING verified)
+  | ffmpeg -> low-latency H.264
+  | HLS (default, ~3–5s) or fragmented MP4 growing-file (compatible, often slower)
 
-HLS remains available via NEARBY_CAST_TRANSPORT=hls (higher latency; some
-receivers grey-screen on ultra-short HLS segments).
+Default transport is HLS (`NEARBY_CAST_TRANSPORT=hls`). Use `fmp4` when a
+receiver grey-screens on HLS.
 """
 
 import sys
@@ -47,9 +46,10 @@ HLS_PATH = os.path.join(MEDIA_DIR, "live.m3u8")
 REMOTE_MEDIA_CLIENTS = set()
 REMOTE_MEDIA_LOCK = threading.Lock()
 SELECTED_ENCODER = "uninitialized"
-# fmp4 is the verified low-grey-screen path for Android TV / Cast boxes.
-# Set NEARBY_CAST_TRANSPORT=hls only when a receiver requires HLS.
-TRANSPORT = os.environ.get("NEARBY_CAST_TRANSPORT", "fmp4").strip().lower()
+# Default HLS (1s segments) ≈ 3–5s glass-to-glass on most Cast boxes.
+# Growing-file fMP4 is more compatible (fewer grey screens) but Cast often
+# buffers 15–20s before the live edge — use NEARBY_CAST_TRANSPORT=fmp4 then.
+TRANSPORT = os.environ.get("NEARBY_CAST_TRANSPORT", "hls").strip().lower()
 if TRANSPORT not in {"fmp4", "hls"}:
     raise RuntimeError(f"Unsupported NEARBY_CAST_TRANSPORT={TRANSPORT!r}")
 
@@ -261,22 +261,29 @@ def select_video_encoder() -> tuple[str, list[str], list[str]]:
     if forced not in {"auto", "h264_vaapi", "h264_nvenc", "h264_qsv", "libx264"}:
         raise RuntimeError(f"Unsupported requested encoder: {forced}")
 
+    # GOP 15 @ 30fps ≈ 0.5s — shorter fragments / HLS segments for lower delay.
+    gop = "15"
     candidates = []
     for device in glob("/dev/dri/renderD*"):
         candidates.append((
             "h264_vaapi",
             ["-init_hw_device", f"vaapi=va:{device}", "-filter_hw_device", "va"],
-            ["-vf", "format=nv12,hwupload", "-c:v", "h264_vaapi", "-bf", "0", "-g", "30", "-b:v", "4M"],
+            ["-vf", "format=nv12,hwupload", "-c:v", "h264_vaapi", "-bf", "0", "-g", gop, "-b:v", "4M"],
         ))
         candidates.append((
             "h264_vaapi",
             ["-vaapi_device", device],
-            ["-vf", "format=nv12,hwupload", "-c:v", "h264_vaapi", "-bf", "0", "-g", "30", "-b:v", "4M"],
+            ["-vf", "format=nv12,hwupload", "-c:v", "h264_vaapi", "-bf", "0", "-g", gop, "-b:v", "4M"],
         ))
     candidates.extend([
-        ("h264_nvenc", [], ["-c:v", "h264_nvenc", "-preset", "p1", "-tune", "ull", "-bf", "0", "-g", "30", "-b:v", "4M"]),
-        ("h264_qsv", [], ["-c:v", "h264_qsv", "-preset", "veryfast", "-bf", "0", "-g", "30", "-b:v", "4M"]),
-        ("libx264", [], ["-c:v", "libx264", "-profile:v", "baseline", "-level", "4.0", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p", "-bf", "0", "-g", "30", "-keyint_min", "30", "-sc_threshold", "0", "-b:v", "3500k", "-maxrate", "4000k", "-bufsize", "2000k"]),
+        ("h264_nvenc", [], ["-c:v", "h264_nvenc", "-preset", "p1", "-tune", "ull", "-bf", "0", "-g", gop, "-b:v", "4M"]),
+        ("h264_qsv", [], ["-c:v", "h264_qsv", "-preset", "veryfast", "-bf", "0", "-g", gop, "-b:v", "4M"]),
+        ("libx264", [], [
+            "-c:v", "libx264", "-profile:v", "baseline", "-level", "4.0",
+            "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+            "-bf", "0", "-g", gop, "-keyint_min", gop, "-sc_threshold", "0",
+            "-b:v", "3500k", "-maxrate", "4000k", "-bufsize", "700k",
+        ]),
     ])
 
     for name, global_args, video_args in candidates:
@@ -395,7 +402,8 @@ class UniversalHandler(http.server.BaseHTTPRequestHandler):
                 try:
                     with open(path, "rb") as handle:
                         handle.seek(position)
-                        chunk = handle.read(min(256 * 1024, size - position))
+                        # Small chunks so the receiver sees new media sooner.
+                        chunk = handle.read(min(32 * 1024, size - position))
                 except OSError:
                     break
                 if not chunk:
@@ -520,30 +528,42 @@ def encoder_video_args_for_cast(base_video_args: list[str]) -> list[str]:
         set_flag("-profile:v", "baseline")
         set_flag("-level", "4.0")
         set_flag("-bf", "0")
-        set_flag("-g", "30")
+        set_flag("-g", "15")
+        set_flag("-keyint_min", "15")
+        set_flag("-bufsize", "700k")
     return args
 
 
 def media_output_args() -> list[str]:
     if TRANSPORT == "fmp4":
+        # Short fragments + flush: still often 10s+ on Default Media Receiver,
+        # but much better than 1s keyframe-only fragments with a large VBV.
         return [
             "-movflags",
             "frag_keyframe+empty_moov+default_base_moof+omit_tfhd_offset",
+            "-frag_duration",
+            "500000",
+            "-flush_packets",
+            "1",
+            "-muxdelay",
+            "0",
+            "-muxpreload",
+            "0",
             "-f",
             "mp4",
             FMP4_PATH,
         ]
-    # HLS fallback: 1s segments — shorter than classic VOD HLS, longer than the
-    # 0.2s path that left Android TV Cast boxes stuck buffering.
+    # Default: 1s HLS — typical Cast live-edge latency ~3–5s (not 15–20s fMP4).
+    # Avoid sub-second HLS; that previously grey-screened Android TV boxes.
     return [
         "-f",
         "hls",
         "-hls_time",
         "1",
         "-hls_list_size",
-        "4",
+        "3",
         "-hls_flags",
-        "delete_segments+append_list+omit_endlist+independent_segments",
+        "delete_segments+append_list+omit_endlist+independent_segments+program_date_time",
         HLS_PATH,
     ]
 
@@ -596,18 +616,24 @@ def start_capture(output_name: str, geometry: str, audio_mode: str):
 
     ffm_cmd = [
         "ffmpeg", "-y", *encoder_global_args,
+        "-fflags", "nobuffer+flush_packets",
+        "-flags", "low_delay",
+        "-probesize", "32",
+        "-analyzeduration", "0",
         "-f", "rawvideo",
         "-video_size", f"{cap_w}x{cap_h}",
         "-pix_fmt", "bgr0",
         "-framerate", "30",
+        "-thread_queue_size", "64",
         "-i", pipe,
         *audio_in,
         "-map", "0:v:0", "-map", "1:a:0",
         *encoder_video_args,
-        "-acodec",   "aac",
-        "-b:a",      "128k",
-        "-ar",       "44100",
-        "-ac",       "2",
+        "-acodec", "aac",
+        "-b:a", "96k",
+        "-ar", "44100",
+        "-ac", "2",
+        "-flush_packets", "1",
         "-progress", PROGRESS_FILE,
         "-nostats",
         *media_output_args(),
