@@ -45,8 +45,38 @@ if [ -z "$PKG" ]; then
 fi
 
 echo "Installing to /usr/local (sudo)..."
-# Stop the old broken installer hack that served stale UI on :1420
-sudo pkill -f 'python3 -m http.server 1420 --directory /usr/share/nearby-cast/dist' 2>/dev/null || true
+# Stop the old broken installer hack that served stale UI on :1420.
+# Kill by listening port (no sudo) — never hang on an interactive sudo password prompt.
+python3 - <<'PY' || true
+import os, re
+want = 1420
+inodes = set()
+for path in ("/proc/net/tcp", "/proc/net/tcp6"):
+    try:
+        lines = open(path).read().splitlines()[1:]
+    except FileNotFoundError:
+        continue
+    for line in lines:
+        parts = line.split()
+        _ip, port = parts[1].split(":")
+        if int(port, 16) == want and parts[3] == "0A":
+            inodes.add(parts[9])
+for pid in os.listdir("/proc"):
+    if not pid.isdigit():
+        continue
+    fd = f"/proc/{pid}/fd"
+    try:
+        for ent in os.listdir(fd):
+            try:
+                target = os.readlink(f"{fd}/{ent}")
+            except Exception:
+                continue
+            m = re.match(r"socket:\[(\d+)\]", target)
+            if m and m.group(1) in inodes:
+                os.kill(int(pid), 9)
+    except Exception:
+        pass
+PY
 
 sudo mkdir -p /usr/share/nearby-cast/dist/assets
 sudo mkdir -p /usr/local/bin /usr/share/applications
