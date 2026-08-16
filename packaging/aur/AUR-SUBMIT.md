@@ -1,0 +1,5 @@
+- Create AUR account at https://aur.archlinux.org/register
+- Add SSH public key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIgeZNJq7SlSsAtrr9RNWdDGYunNgNJQ8VVsqhy2D+cT
+- Then run: git clone ssh://aur@aur.archlinux.org/nearby-cast.git /tmp/aur-nearby-cast
+- Copy PKGBUILD and .SRCINFO there
+- git add -A && git commit && git push

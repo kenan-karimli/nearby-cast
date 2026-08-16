@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Nearby Cast
+Comment=Cast anything. Nearby.
+Exec=nearby-cast
+Icon=nearby-cast
+Type=Application
+Categories=Network;Video;
+Keywords=cast;screen;tv;chromecast;dlna;

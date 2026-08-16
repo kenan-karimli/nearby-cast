@@ -1,0 +1,23 @@
+pkgbase = nearby-cast
+	pkgdesc = Cast anything. Nearby. Modern Linux screen casting to Android TV, DLNA, browsers.
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/kenan-karimli/nearby-cast
+	arch = x86_64
+	license = GPL3
+	makedepends = rust
+	makedepends = cargo
+	makedepends = nodejs
+	makedepends = npm
+	depends = webkit2gtk-4.1
+	depends = gtk3
+	depends = wf-recorder
+	depends = ffmpeg
+	depends = python
+	depends = python-requests
+	optdepends = slurp: for region selection
+	optdepends = hyprland: for window list
+	source = nearby-cast-0.1.0.tar.gz::https://github.com/kenan-karimli/nearby-cast/archive/refs/tags/v0.1.0.tar.gz
+	sha256sums = 8db751afbf575867f7f595eab8c3afe5b0e8835ab44d5e20eca4b8f4a286bc65
+
+pkgname = nearby-cast

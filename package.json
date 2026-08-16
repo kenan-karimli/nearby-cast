@@ -1,0 +1,39 @@
+{
+  "name": "nearby-cast",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "tauri": "tauri",
+    "virtual-receivers": "python3 tools/virtual-receivers/run.py",
+    "test:virtual": "python3 tools/virtual-receivers/e2e_test.py",
+    "test:virtual-production": "python3 tools/virtual-receivers/production_path_test.py",
+    "test:production": "python3 tools/virtual-receivers/production_path_test.py",
+    "test:protocols": "python3 tools/virtual-receivers/e2e_test.py && python3 tools/virtual-receivers/production_path_test.py",
+    "test:failure": "python3 tools/virtual-receivers/failure_test.py",
+    "test:latency": "python3 tools/virtual-receivers/latency_test.py",
+    "test:stress": "python3 tools/virtual-receivers/stress_test.py",
+    "test:all": "python3 tools/virtual-receivers/run_all_tests.py"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.0",
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

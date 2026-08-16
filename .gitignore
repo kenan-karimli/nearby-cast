@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite
+dist/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Rust
+**/*.rs.bk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.venv-fluxcast/
+venv/
+env/
+
+# Build artifacts
+*.AppImage
+*.deb
+*.rpm
+*.pkg.tar.*
+*.tar.gz
+
+# Flatpak local build/cache/repo (never publish)
+.flatpak-builder/
+build-flatpak/
+build-flatpak-logs/
+repo-flatpak/
+build-dir/
+repo/
+
+# Agent / editor local state
+.agents/
+.codex/
+.cursor/
+
+# Release bundles
+packaging/release-bundle/
+packaging/nearby-cast-*.tar.gz
+
+# Keep manually maintained dist_pkg release files
+!dist_pkg/
+!dist_pkg/**
+!dist_pkg/dist/
+!dist_pkg/dist/**
+
+# Virtual lab result dumps
+tools/virtual-receivers/last-*-result.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+**/secrets*
+
+# Stale local binaries — ship releases via GitHub Releases instead
+dist_pkg/nearby-cast-bin

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.nearbycast.NearbyCast</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Nearby Cast</name>
+  <summary>Cast your Linux desktop to nearby displays</summary>
+  <description>
+    <p>
+      NearbyCast discovers nearby displays and casts your Linux desktop using the
+      best available sender path. Google Cast uses a low-latency fragmented MP4
+      stream verified to reach PLAYING on Android TV Cast receivers. Miracast,
+      AirPlay lab, and authenticated NearbyCast-to-NearbyCast paths are also
+      supported where hardware and protocol limits allow.
+    </p>
+    <p>
+      The application uses Wayland capture through wf-recorder / portals when
+      available, probes real encoders before selection, and only reports Connected
+      after the receiver accepts media.
+    </p>
+  </description>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Network</category>
+  </categories>
+  <keywords>
+    <keyword>cast</keyword>
+    <keyword>screen</keyword>
+    <keyword>tv</keyword>
+    <keyword>chromecast</keyword>
+    <keyword>miracast</keyword>
+    <keyword>airplay</keyword>
+  </keywords>
+  <content_rating type="oars-1.1" />
+  <developer_name>Kenan Karimli</developer_name>
+  <url type="homepage">https://github.com/kenan-karimli/nearby-cast</url>
+  <url type="bugtracker">https://github.com/kenan-karimli/nearby-cast/issues</url>
+  <releases>
+    <release version="0.1.0" date="2026-08-16">
+      <description>
+        <p>Production hardening: fMP4 Cast transport, protocol router, virtual lab, Flatpak on GNOME 49.</p>
+      </description>
+    </release>
+  </releases>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/kenan-karimli/nearby-cast/main/src/swappy-20260812_082317.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">io.nearbycast.NearbyCast.desktop</launchable>
+</component>
