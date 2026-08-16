@@ -7,8 +7,9 @@ Pipeline:
   | ffmpeg -> low-latency H.264
   | HLS (default, ~3–5s) or fragmented MP4 growing-file (compatible, often slower)
 
-Default transport is HLS (`NEARBY_CAST_TRANSPORT=hls`). Use `fmp4` when a
-receiver grey-screens on HLS.
+Default transport is fragmented MP4 (`NEARBY_CAST_TRANSPORT=fmp4`) — verified
+PLAYING on Android TV. Optional HLS (`hls`) is lower latency when the box
+accepts it; ultra-short HLS previously grey-screened.
 """
 
 import sys
@@ -46,10 +47,10 @@ HLS_PATH = os.path.join(MEDIA_DIR, "live.m3u8")
 REMOTE_MEDIA_CLIENTS = set()
 REMOTE_MEDIA_LOCK = threading.Lock()
 SELECTED_ENCODER = "uninitialized"
-# Default HLS (1s segments) ≈ 3–5s glass-to-glass on most Cast boxes.
-# Growing-file fMP4 is more compatible (fewer grey screens) but Cast often
-# buffers 15–20s before the live edge — use NEARBY_CAST_TRANSPORT=fmp4 then.
-TRANSPORT = os.environ.get("NEARBY_CAST_TRANSPORT", "hls").strip().lower()
+# fMP4 is the verified path for Android TV / Cast boxes on this project.
+# HLS (~3–5s) is faster when it works: NEARBY_CAST_TRANSPORT=hls
+# Growing-file fMP4 often buffers ~10–20s on Default Media Receiver.
+TRANSPORT = os.environ.get("NEARBY_CAST_TRANSPORT", "fmp4").strip().lower()
 if TRANSPORT not in {"fmp4", "hls"}:
     raise RuntimeError(f"Unsupported NEARBY_CAST_TRANSPORT={TRANSPORT!r}")
 

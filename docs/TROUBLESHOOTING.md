@@ -1,24 +1,23 @@
 # Troubleshooting
 
-## Grey screen on Google Cast / Android TV
+## Grey screen / TV never shows the desktop (Google Cast)
 
-Symptom: Default Media Receiver opens, UI shows Connected, TV stays grey.
+Symptom: App says Casting, TV stays grey or blank; bitrate may be N/A.
 
-Cause: ultra-short HLS (<1s) often leaves Cast boxes in `BUFFERING`.
+Cause: some Cast boxes never leave `BUFFERING` on HLS.
 
-Default transport is **1s HLS** (typical ~3–5s delay). If the TV greys out:
+Current default is **fMP4** (compatible). NearbyCast only marks casting after
+`PLAYING` + a media GET. If you want lower delay and your TV accepts HLS:
 
 ```bash
-export NEARBY_CAST_TRANSPORT=fmp4
+NEARBY_CAST_TRANSPORT=hls nearby-cast
 ```
 
-fMP4 is more compatible but Cast often buffers **15–20s** behind live.
+## High delay (~10–20s) on Google Cast
 
-## High delay (~15–20s) while casting
-
-That is usually growing-file **fMP4** receiver buffering, not dropped frames
-(UI bitrate/FPS can look fine). Prefer default HLS, or stop and cast again
-after updating `cast_launcher.py`.
+Growing-file **fMP4** makes Default Media Receiver buffer heavily. That is a
+Cast receiver limit, not dropped frames. Try HLS for ~3–5s when it works.
+Miracast/NearbyCast are the low-latency paths when available.
 
 ## Capture permission / blank capture
 
