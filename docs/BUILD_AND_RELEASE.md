@@ -40,9 +40,9 @@ Default transport is fMP4 (`NEARBY_CAST_TRANSPORT=fmp4`). Lab/CI may set
 ```bash
 npm ci
 npm run build
-cargo build --release --manifest-path src-tauri/Cargo.toml
-# optional full Tauri bundler:
-npm run tauri build
+# Required: embeds the UI. Plain `cargo build --release` still points at
+# http://localhost:1420 and fails with "Connection refused" when shipped alone.
+npm run tauri build -- --bundles deb
 ```
 
 Verified native executable:
