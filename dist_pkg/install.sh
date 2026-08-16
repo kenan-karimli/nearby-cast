@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-set -e
+# Install Nearby Cast from the latest GitHub Release tarball.
+set -euo pipefail
 
 REPO="kenan-karimli/nearby-cast"
-RAW_BASE="https://raw.githubusercontent.com/${REPO}/main/dist_pkg"
+API="https://api.github.com/repos/${REPO}/releases/latest"
 TMP_DIR=$(mktemp -d)
-
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
@@ -12,48 +12,63 @@ echo "Nearby Cast - Installation"
 echo "--------------------------"
 echo ""
 
-mkdir -p "${TMP_DIR}/dist/assets"
-
-echo "Downloading..."
-curl -fsSL "${RAW_BASE}/nearby-cast-bin"               -o "${TMP_DIR}/nearby-cast-bin"
-curl -fsSL "${RAW_BASE}/nearby-cast"                   -o "${TMP_DIR}/nearby-cast"
-curl -fsSL "${RAW_BASE}/cast_launcher.py"              -o "${TMP_DIR}/cast_launcher.py"
-curl -fsSL "${RAW_BASE}/nearby-cast.desktop"           -o "${TMP_DIR}/nearby-cast.desktop"
-curl -fsSL "${RAW_BASE}/nearby-cast.svg"               -o "${TMP_DIR}/nearby-cast.svg"
-curl -fsSL "${RAW_BASE}/dist/index.html"               -o "${TMP_DIR}/dist/index.html"
-
-# Extract actual bundle JS filename from index.html
-ASSET_JS=$(grep -oP 'assets/\Kindex-[^"]+\.js' "${TMP_DIR}/dist/index.html" | head -1 || echo "")
-if [ -z "$ASSET_JS" ]; then
-    ASSET_JS="index-B69Zs4o8.js"
+if ! command -v curl >/dev/null || ! command -v python3 >/dev/null || ! command -v tar >/dev/null; then
+  echo "Need curl, python3, and tar on PATH." >&2
+  exit 1
 fi
 
-curl -fsSL "${RAW_BASE}/dist/assets/${ASSET_JS}" -o "${TMP_DIR}/dist/assets/${ASSET_JS}"
+echo "Resolving latest release..."
+ASSET_URL=$(curl -fsSL "$API" | python3 -c '
+import json, sys
+rel = json.load(sys.stdin)
+if rel.get("message"):
+    raise SystemExit(rel["message"])
+for asset in rel.get("assets") or []:
+    name = asset.get("name") or ""
+    if name.endswith(".tar.gz") and "nearby-cast" in name:
+        print(asset["browser_download_url"])
+        break
+else:
+    raise SystemExit(
+        "No nearby-cast *.tar.gz on the latest GitHub Release. "
+        "Create a release, or install via Flatpak (see README)."
+    )
+')
 
-echo "Installing..."
+echo "Downloading..."
+curl -fL "$ASSET_URL" -o "$TMP_DIR/nearby-cast.tar.gz"
+tar -xzf "$TMP_DIR/nearby-cast.tar.gz" -C "$TMP_DIR"
+PKG=$(find "$TMP_DIR" -maxdepth 2 -type d -name 'nearby-cast-*' | head -1)
+if [ -z "$PKG" ]; then
+  echo "Release archive layout unexpected." >&2
+  exit 1
+fi
+
+echo "Installing to /usr/local (sudo)..."
+# Stop the old broken installer hack that served stale UI on :1420
+sudo pkill -f 'python3 -m http.server 1420 --directory /usr/share/nearby-cast/dist' 2>/dev/null || true
+
 sudo mkdir -p /usr/share/nearby-cast/dist/assets
-sudo mkdir -p /usr/local/bin
-sudo mkdir -p /usr/share/applications
+sudo mkdir -p /usr/local/bin /usr/share/applications
 sudo mkdir -p /usr/share/icons/hicolor/scalable/apps
-
-# Clean old bundle assets to avoid duplicates
 sudo rm -f /usr/share/nearby-cast/dist/assets/* 2>/dev/null || true
 
-sudo cp "${TMP_DIR}/cast_launcher.py"                           /usr/share/nearby-cast/cast_launcher.py
-sudo cp "${TMP_DIR}/dist/index.html"                            /usr/share/nearby-cast/dist/index.html
-sudo cp "${TMP_DIR}/dist/assets/${ASSET_JS}"             /usr/share/nearby-cast/dist/assets/${ASSET_JS}
-sudo cp "${TMP_DIR}/nearby-cast-bin"                            /usr/local/bin/nearby-cast-bin
-sudo cp "${TMP_DIR}/nearby-cast"                                /usr/local/bin/nearby-cast
-sudo cp "${TMP_DIR}/nearby-cast.desktop"                        /usr/share/applications/nearby-cast.desktop
-sudo cp "${TMP_DIR}/nearby-cast.svg"                            /usr/share/icons/hicolor/scalable/apps/nearby-cast.svg
+sudo cp "$PKG/cast_launcher.py" /usr/share/nearby-cast/cast_launcher.py
+sudo cp "$PKG/dist/index.html" /usr/share/nearby-cast/dist/index.html
+sudo cp "$PKG"/dist/assets/*.js /usr/share/nearby-cast/dist/assets/
+sudo cp "$PKG/nearby-cast-bin" /usr/local/bin/nearby-cast-bin
+sudo cp "$PKG/nearby-cast" /usr/local/bin/nearby-cast
+sudo cp "$PKG/nearby-cast.desktop" /usr/share/applications/nearby-cast.desktop
+sudo cp "$PKG/nearby-cast.svg" /usr/share/icons/hicolor/scalable/apps/nearby-cast.svg
 
 sudo chmod +x /usr/share/nearby-cast/cast_launcher.py
-sudo chmod +x /usr/local/bin/nearby-cast-bin
-sudo chmod +x /usr/local/bin/nearby-cast
-
+sudo chmod +x /usr/local/bin/nearby-cast-bin /usr/local/bin/nearby-cast
 sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
 sudo update-desktop-database 2>/dev/null || true
 
 echo ""
 echo "Installed."
 echo "Run: nearby-cast"
+echo ""
+echo "Note: Google Cast needs python3 + pychromecast + ffmpeg + wf-recorder."
+echo "Miracast extras (fluxcast/nmcli/…) are optional and not required for Cast."

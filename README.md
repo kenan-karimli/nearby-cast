@@ -32,19 +32,16 @@ See `docs/PROTOCOLS.md`, `docs/TESTING.md`, and `docs/TROUBLESHOOTING.md`.
 
 ## Install
 
-### Quick Install
-
-Install the latest version with one command:
+### Quick Install (GitHub Release)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kenan-karimli/nearby-cast/main/install.sh | sh
 ```
 
-The installer automatically detects your Linux system and installs the appropriate release.
+This installs the latest **GitHub Release** tarball to `/usr/local`.  
+It does **not** pull broken raw `dist_pkg` binaries from the git tree.
 
-### Flatpak (recommended on Linux)
-
-From a checkout:
+### Flatpak (from source)
 
 ```bash
 flatpak-builder --user --force-clean --repo=repo-flatpak \
@@ -64,10 +61,9 @@ Download the latest release:
 
 Available packages may include:
 
-* `.bin`
-* `.deb`
-* `.rpm`
-* Flatpak (local repo / Flathub later)
+* `.tar.gz` (quick install / `/usr/local`)
+* `.deb` / `.rpm` (when bundled)
+* Flatpak (local repo; Flathub later)
 
 ## Requirements
 
