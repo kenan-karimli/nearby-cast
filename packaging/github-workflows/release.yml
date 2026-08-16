@@ -24,7 +24,7 @@ jobs:
         run: |
           npm ci
           npm run build
-          cargo build --release --manifest-path src-tauri/Cargo.toml
+          npm run tauri build -- --bundles deb
       - name: Archive binary
         run: |
           tar -czf nearby-cast-linux-x86_64.tar.gz -C src-tauri/target/release nearby-cast ../../../cast_launcher.py

@@ -67,7 +67,8 @@ modules:
       - npm install --no-audit --no-fund
       - ./node_modules/.bin/tsc --noEmit
       - ./node_modules/.bin/vite build
-      - cargo build --release --manifest-path src-tauri/Cargo.toml
+      # Embed the frontend. Plain `cargo build --release` still points at localhost:1420.
+      - ./node_modules/.bin/tauri build --bundles deb
       - install -Dm755 src-tauri/target/release/nearby-cast /app/share/nearby-cast/nearby-cast-bin
       - install -Dm755 cast_launcher.py /app/share/nearby-cast/cast_launcher.py
       - mkdir -p /app/bin /app/lib/codecs-extra
