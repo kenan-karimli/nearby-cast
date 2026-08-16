@@ -3,14 +3,15 @@
 #   sudo pacman -S fluxcast mpv nmcli slurp wlr-randr
 # Run from the NearbyCast checkout (needs your sudo password once).
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+# Script lives in scripts/; repo root is the parent directory.
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [ ! -x dist_pkg/nearby-cast-bin ]; then
   echo "Building release binary…"
   npm run build
-  cargo build --release --manifest-path src-tauri/Cargo.toml
-  cp -f src-tauri/target/release/nearby-cast dist_pkg/nearby-cast-bin
+  cargo build --release --manifest-path "$ROOT/src-tauri/Cargo.toml"
+  cp -f "$ROOT/src-tauri/target/release/nearby-cast" dist_pkg/nearby-cast-bin
   cp -f cast_launcher.py dist_pkg/cast_launcher.py
   rm -rf dist_pkg/dist && mkdir -p dist_pkg/dist/assets
   cp -f dist/index.html dist_pkg/dist/
