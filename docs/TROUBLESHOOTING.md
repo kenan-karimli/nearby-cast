@@ -4,14 +4,21 @@
 
 Symptom: Default Media Receiver opens, UI shows Connected, TV stays grey.
 
-Cause: ultra-short HLS segments often leave Cast boxes in `BUFFERING`.
+Cause: ultra-short HLS (<1s) often leaves Cast boxes in `BUFFERING`.
 
-Fix in current builds: default transport is fragmented MP4 (`NEARBY_CAST_TRANSPORT=fmp4`).
-NearbyCast waits for `PLAYING` before reporting casting. To force HLS:
+Default transport is **1s HLS** (typical ~3–5s delay). If the TV greys out:
 
 ```bash
-export NEARBY_CAST_TRANSPORT=hls
+export NEARBY_CAST_TRANSPORT=fmp4
 ```
+
+fMP4 is more compatible but Cast often buffers **15–20s** behind live.
+
+## High delay (~15–20s) while casting
+
+That is usually growing-file **fMP4** receiver buffering, not dropped frames
+(UI bitrate/FPS can look fine). Prefer default HLS, or stop and cast again
+after updating `cast_launcher.py`.
 
 ## Capture permission / blank capture
 
