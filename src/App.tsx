@@ -57,6 +57,8 @@ interface CastMetrics {
   fps?: number | null;
   bitrate_kbps?: number | null;
   drop_frames?: number | null;
+  transport?: string | null;
+  encoder?: string | null;
 }
 
 interface CastHealth {
@@ -584,11 +586,16 @@ export default function App() {
             </div>
 
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#f4f4f5', marginBottom: '4px' }}>
-              Casting to {castStatus.target.name}
+              {castStatus.stage === 'casting'
+                ? `Casting to ${castStatus.target.name}`
+                : castStatus.stage === 'failed'
+                  ? `Failed — ${castStatus.target.name}`
+                  : `Connecting to ${castStatus.target.name}`}
             </div>
             <div style={{ fontSize: '11px', color: '#71717a', marginBottom: '12px' }}>
               {castStatus.protocol}
               {castStatus.selectionLabel ? ` · ${castStatus.selectionLabel}` : ''}
+              {castMetrics?.transport ? ` · ${String(castMetrics.transport).toUpperCase()}` : ''}
             </div>
 
             {castStatus.stage === 'casting' && (
@@ -598,8 +605,8 @@ export default function App() {
               }}>
                 <div style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '7px', padding: '7px 8px' }}>
                   <div style={{ fontSize: '9px', color: '#71717a', textTransform: 'uppercase', fontWeight: 600 }}>Latency</div>
-                  <div style={{ fontSize: '11px', color: '#f4f4f5', fontFamily: 'monospace', marginTop: '2px' }}>
-                    Latency unavailable
+                  <div style={{ fontSize: '11px', color: '#a1a1aa', fontFamily: 'monospace', marginTop: '2px' }}>
+                    Not measured (Cast buffers)
                   </div>
                 </div>
                 <div style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '7px', padding: '7px 8px' }}>
