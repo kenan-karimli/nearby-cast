@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NearbyCast Virtual Lab</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121821;
+      --line: #243041;
+      --text: #e7eef8;
+      --muted: #8aa0b8;
+      --accent: #3dd6c6;
+      --warn: #f0b429;
+      --bad: #ef5f67;
+      --ok: #3ecf8e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #163247 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #1a2438 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px;
+    }
+    h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); margin-bottom: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .card {
+      background: color-mix(in srgb, var(--panel) 92%, black);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .name { font-weight: 650; font-size: 15px; }
+    .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    button {
+      background: #1b2736;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    button:hover { border-color: var(--accent); }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .pill.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+    .pill.warn { color: var(--warn); }
+    .pill.bad { color: var(--bad); }
+    pre {
+      background: #0a1018;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      font-size: 12px;
+      color: #c7d7ea;
+      max-height: 280px;
+    }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+    label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    input[type="number"] {
+      width: 72px;
+      background: #0f1620;
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>NearbyCast Virtual Lab</h1>
+  <div class="sub">Controls real protocol endpoints — not frontend mock state.</div>
+  <div class="controls">
+    <label>Latency ms <input id="latency" type="number" value="0" min="0" /></label>
+    <label>Packet loss <input id="loss" type="number" value="0" min="0" max="1" step="0.05" /></label>
+    <button onclick="applyInject()">Apply inject</button>
+    <button onclick="inject({reject_auth:true})">Reject auth</button>
+    <button onclick="inject({reject_media:true})">Reject media</button>
+    <button onclick="inject({reject_auth:false,reject_media:false,crash:false})">Clear rejects</button>
+  </div>
+  <div id="cards" class="grid"></div>
+  <h2 style="margin-top:22px;font-size:16px;">Live status</h2>
+  <pre id="raw">loading…</pre>
+  <script>
+    async function refresh() {
+      const res = await fetch('/status');
+      const data = await res.json();
+      document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+      const root = document.getElementById('cards');
+      root.innerHTML = '';
+      for (const [key, device] of Object.entries(data.devices || {})) {
+        const el = document.createElement('div');
+        el.className = 'card';
+        const adv = device.advertisement === 'ready' ? 'ok' : 'warn';
+        el.innerHTML = `
+          <div class="name">${device.name}</div>
+          <div class="meta">${device.protocol} · ${device.ip}:${device.port}</div>
+          <div class="row">
+            <span class="pill ${adv}">adv:${device.advertisement}</span>
+            <span class="pill">${device.connection}</span>
+            <span class="pill">${device.authentication}</span>
+            <span class="pill ${device.stream === 'receiving' || device.stream === 'playing' ? 'ok' : ''}">${device.stream}</span>
+          </div>
+          <div class="meta" style="margin-top:8px">
+            bitrate: ${device.metrics.bitrate_kbps ?? '—'} kbps ·
+            packets: ${device.metrics.received_packets ?? 0} ·
+            codec: ${device.metrics.codec ?? '—'}
+          </div>
+          <div class="row">
+            <button onclick="action('${key}','restart')">Restart</button>
+            <button onclick="action('${key}','stop')">Stop</button>
+            <button onclick="action('${key}','start')">Start</button>
+            <button onclick="action('${key}','crash')">Crash</button>
+          </div>`;
+        root.appendChild(el);
+      }
+    }
+    async function inject(payload) {
+      await fetch('/inject', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      refresh();
+    }
+    async function applyInject() {
+      await inject({
+        latency_ms: Number(document.getElementById('latency').value || 0),
+        packet_loss: Number(document.getElementById('loss').value || 0),
+      });
+    }
+    async function action(device, actionName) {
+      await fetch('/action', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ device, action: actionName }),
+      });
+      refresh();
+    }
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
+</body>
+</html>

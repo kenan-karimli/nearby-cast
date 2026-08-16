@@ -1,0 +1,38 @@
+pkgname=nearby-cast
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Linux Wayland screen casting to Google Cast receivers"
+arch=('x86_64')
+url="https://github.com/kenan-karimli/nearby-cast"
+license=('GPL3')
+depends=('webkit2gtk-4.1' 'gtk3' 'wf-recorder' 'ffmpeg' 'python')
+optdepends=('python-pychromecast: Google Cast receiver control (package availability varies by repository)'
+            'slurp: for region selection'
+            'hyprland: for window list')
+makedepends=('rust' 'cargo' 'nodejs' 'npm')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/kenan-karimli/nearby-cast/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('8db751afbf575867f7f595eab8c3afe5b0e8835ab44d5e20eca4b8f4a286bc65')
+
+build() {
+    cd "$pkgname-$pkgver"
+    npm ci
+    npm run build
+    cargo build --release --manifest-path src-tauri/Cargo.toml
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -Dm755 src-tauri/target/release/nearby-cast "$pkgdir/usr/share/nearby-cast/nearby-cast-bin"
+    install -Dm755 cast_launcher.py "$pkgdir/usr/share/nearby-cast/cast_launcher.py"
+    
+    mkdir -p "$pkgdir/usr/bin"
+    cat > "$pkgdir/usr/bin/nearby-cast" << 'EOF'
+#!/bin/sh
+export CAST_LAUNCHER="/usr/share/nearby-cast/cast_launcher.py"
+exec /usr/share/nearby-cast/nearby-cast-bin "$@"
+EOF
+    chmod +x "$pkgdir/usr/bin/nearby-cast"
+
+    install -Dm644 packaging/aur/nearby-cast.desktop "$pkgdir/usr/share/applications/nearby-cast.desktop"
+    install -Dm644 packaging/aur/nearby-cast.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/nearby-cast.svg"
+}

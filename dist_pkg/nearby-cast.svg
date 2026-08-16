@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#09090b"/>
+  <!-- Screen/monitor body -->
+  <rect x="96" y="120" width="320" height="200" rx="16" fill="none" stroke="#f4f4f5" stroke-width="22"/>
+  <!-- Monitor stand -->
+  <line x1="256" y1="320" x2="256" y2="370" stroke="#f4f4f5" stroke-width="22" stroke-linecap="round"/>
+  <line x1="190" y1="370" x2="322" y2="370" stroke="#f4f4f5" stroke-width="22" stroke-linecap="round"/>
+  <!-- Cast waves (bottom-left of screen) -->
+  <circle cx="152" cy="277" r="10" fill="#f4f4f5"/>
+  <path d="M152 253 a24 24 0 0 1 24 24" fill="none" stroke="#f4f4f5" stroke-width="16" stroke-linecap="round"/>
+  <path d="M152 228 a48 48 0 0 1 48 48" fill="none" stroke="#f4f4f5" stroke-width="16" stroke-linecap="round"/>
+</svg>

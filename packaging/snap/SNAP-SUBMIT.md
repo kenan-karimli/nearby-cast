@@ -1,0 +1,5 @@
+- Create account at https://snapcraft.io/account
+- Run: snapcraft login
+- Run: snapcraft (to build)
+- Run: snapcraft upload --release=stable nearby-cast_0.1.0_amd64.snap
+- Or use: snapcraft register nearby-cast && snapcraft upload

@@ -1,0 +1,101 @@
+app-id: io.nearbycast.NearbyCast
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: nearby-cast
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  - --share=network
+  - --share=ipc
+  - --socket=session-bus
+  - --filesystem=xdg-run/pipewire-0
+  - --talk-name=org.freedesktop.portal.Desktop
+  - --talk-name=org.freedesktop.portal.ScreenCast
+  - --talk-name=org.freedesktop.portal.Notification
+  - --talk-name=org.freedesktop.portal.Background
+  - --talk-name=org.kde.StatusNotifierWatcher
+add-extensions:
+  # Freedesktop 25.08 replaces ffmpeg-full with codecs-extra (libx264 / patent codecs).
+  org.freedesktop.Platform.codecs-extra:
+    directory: lib/codecs-extra
+    add-ld-path: .
+    version: '25.08-extra'
+    autodelete: true
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node20
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node20/bin
+  env:
+    CARGO_HOME: /run/build/nearby-cast/cargo
+modules:
+  - name: wf-recorder
+    buildsystem: meson
+    config-opts:
+      - -Ddefault_library=shared
+    sources:
+      - type: git
+        url: https://github.com/ammen99/wf-recorder
+        tag: v0.6.0
+        commit: ca103be2473db0983baf74e17b291385c3c79d79
+
+  # Local/dev builds may use network. For Flathub, replace this module with
+  # flatpak-pip-generator output (pychromecast + zeroconf + protobuf).
+  - name: python3-cast-deps
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - pip3 install --prefix=${FLATPAK_DEST} 'pychromecast>=14,<15'
+    sources:
+      - type: file
+        path: io.nearbycast.NearbyCast.metainfo.xml
+
+  - name: nearby-cast
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+      append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node20/bin
+    build-commands:
+      - node --version && npm --version
+      - rm -rf node_modules
+      - npm install --no-audit --no-fund
+      - ./node_modules/.bin/tsc --noEmit
+      - ./node_modules/.bin/vite build
+      - cargo build --release --manifest-path src-tauri/Cargo.toml
+      - install -Dm755 src-tauri/target/release/nearby-cast /app/share/nearby-cast/nearby-cast-bin
+      - install -Dm755 cast_launcher.py /app/share/nearby-cast/cast_launcher.py
+      - mkdir -p /app/bin /app/lib/codecs-extra
+      - |
+        cat << 'EOF' > /app/bin/nearby-cast
+        #!/bin/sh
+        export CAST_LAUNCHER="/app/share/nearby-cast/cast_launcher.py"
+        export PATH="/app/bin:$PATH"
+        export PYTHONPATH="/app/lib/python3.13/site-packages:${PYTHONPATH:-}"
+        # codecs-extra mounts patent-restricted encoders (libx264) for capture encode.
+        export LD_LIBRARY_PATH="/app/lib/codecs-extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+        exec /app/share/nearby-cast/nearby-cast-bin "$@"
+        EOF
+      - chmod +x /app/bin/nearby-cast
+      - install -Dm644 flatpak/io.nearbycast.NearbyCast.desktop /app/share/applications/io.nearbycast.NearbyCast.desktop
+      - install -Dm644 flatpak/io.nearbycast.NearbyCast.metainfo.xml /app/share/metainfo/io.nearbycast.NearbyCast.metainfo.xml
+      - if [ -f src-tauri/icons/128x128.png ]; then install -Dm644 src-tauri/icons/128x128.png /app/share/icons/hicolor/128x128/apps/io.nearbycast.NearbyCast.png; fi
+    sources:
+      # Checkout-relative for local builds. Replace with tagged archive+sha256 for Flathub.
+      - type: dir
+        path: ..
+        skip:
+          - node_modules
+          - src-tauri/target
+          - .venv-fluxcast
+          - build-flatpak
+          - repo-flatpak
+          - .flatpak-builder
+          - dist
+          - __pycache__
+          - build-flatpak-logs

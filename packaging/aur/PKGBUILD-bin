@@ -1,0 +1,48 @@
+# Maintainer: Your Name <your@email.com>
+# AUR Binary Package (pre-built — no compilation needed)
+pkgname=nearby-cast-bin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Cast anything. Nearby. Modern Linux desktop screen casting application. (pre-built binary)"
+arch=('x86_64')
+url="https://github.com/nearbycast/nearby-cast"
+license=('GPL3')
+provides=('nearby-cast')
+conflicts=('nearby-cast')
+depends=(
+    'webkit2gtk-4.1'
+    'libayatana-appindicator'
+    'librsvg'
+    'gtk3'
+    'pipewire'
+    'xdg-desktop-portal'
+)
+optdepends=(
+    'xdg-desktop-portal-hyprland: screen capture on Hyprland'
+    'xdg-desktop-portal-kde: screen capture on KDE Plasma'
+    'xdg-desktop-portal-gnome: screen capture on GNOME'
+    'xdg-desktop-portal-wlr: screen capture on Sway/wlroots'
+)
+source=(
+    "nearby-cast-${pkgver}-x86_64.tar.gz::https://github.com/nearbycast/nearby-cast/releases/download/v${pkgver}/nearby-cast-${pkgver}-x86_64.tar.gz"
+)
+sha256sums=('SKIP')
+
+package() {
+    cd "$srcdir"
+
+    install -Dm755 "nearby-cast" \
+        "$pkgdir/usr/bin/nearby-cast"
+
+    install -Dm644 "io.nearbycast.NearbyCast.desktop" \
+        "$pkgdir/usr/share/applications/io.nearbycast.NearbyCast.desktop"
+
+    install -Dm644 "icons/32x32.png" \
+        "$pkgdir/usr/share/icons/hicolor/32x32/apps/io.nearbycast.NearbyCast.png"
+
+    install -Dm644 "icons/128x128.png" \
+        "$pkgdir/usr/share/icons/hicolor/128x128/apps/io.nearbycast.NearbyCast.png"
+
+    install -Dm644 "io.nearbycast.NearbyCast.metainfo.xml" \
+        "$pkgdir/usr/share/metainfo/io.nearbycast.NearbyCast.metainfo.xml"
+}
