@@ -1,39 +1,89 @@
-# Nearby Cast
+# NearbyCast
 
-Nearby Cast is a Linux desktop screen-casting application for compatible network displays.
+### Cast anything. Nearby. Open source.
 
-## Supported paths
+NearbyCast is a native Linux desktop application for discovering nearby receivers and casting a selected part of your screen.
 
-- Google Cast receivers: screen capture over H.264/fMP4, with HLS fallback.
-- NearbyCast receivers: authenticated sender/receiver path.
-- Miracast and AirPlay: lab/third-party receiver paths are verified; physical Wi-Fi Direct and FairPlay Apple TV support are not verified.
-- Capture sources: full display, selected window, and region/crop on supported Wayland environments.
+[Download v0.1.0](https://github.com/kenan-karimli/nearby-cast/releases/tag/v0.1.0) · [Build from source](#build-from-source) · [Report an issue](https://github.com/kenan-karimli/nearby-cast/issues)
 
-## Install
+## Download
 
-Builds are published in GitHub Releases. The native `.deb` and `.rpm` bundles include the production launcher; Google Cast also needs `wf-recorder`, FFmpeg, Python 3, and `pychromecast` on the host.
-
-## Build
+### Debian / Ubuntu
 
 ```bash
-npm ci
-npm run build
-npm run tauri build
+curl -fL -o NearbyCast_0.1.0_amd64.deb \
+  https://github.com/kenan-karimli/nearby-cast/releases/download/v0.1.0/NearbyCast_0.1.0_amd64.deb
+sudo apt install ./NearbyCast_0.1.0_amd64.deb
 ```
 
-For the Rust binary only:
+### Fedora / RHEL
 
 ```bash
-cargo build --release --manifest-path src-tauri/Cargo.toml
+curl -fLO \
+  https://github.com/kenan-karimli/nearby-cast/releases/download/v0.1.0/NearbyCast-0.1.0-1.x86_64.rpm
+sudo dnf install ./NearbyCast-0.1.0-1.x86_64.rpm
 ```
+
+### Quick install
+
+On supported x86_64 Debian-, Fedora-, or RPM-based systems:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kenan-karimli/nearby-cast/main/install.sh | bash
+```
+
+The installer selects the latest published `.deb` or `.rpm`. It does not install development dependencies.
+
+## Features
+
+- Discover receivers on the local network.
+- Capture a full display, selected window, or selected region.
+- Use the receiver’s supported casting path instead of assuming one protocol fits all devices.
+- Native Tauri desktop application for Linux.
+
+## Compatibility
+
+| Protocol | Status |
+| --- | --- |
+| Google Cast | Sender path and virtual receiver verified; physical hardware is receiver-dependent and was not retested for this release. |
+| NearbyCast | Authenticated sender/receiver path verified with virtual receivers. |
+| Miracast | Lab sender/receiver path verified; physical Wi-Fi Direct is unverified. |
+| AirPlay | Lab sender/receiver path verified; FairPlay Apple TV support is unverified. |
+| OneScreen | Physical playback is unverified; do not assume compatibility. |
+
+Screen capture is verified for supported Wayland environments using the available capture tools. X11 capture and other desktop-specific portal behavior are not release claims.
+
+## Requirements
+
+For Google Cast screen capture, the host needs `wf-recorder`, FFmpeg, Python 3, and `pychromecast`. Receivers and the sender must be on the same LAN.
 
 ## Use
 
-1. Start Nearby Cast on the same LAN as the receiver.
-2. Select a discovered receiver and a capture source.
-3. Start casting and stop it from the application when finished.
+1. Start NearbyCast.
+2. Select a discovered receiver.
+3. Choose Full Screen, Window, or Region.
+4. Start casting and stop the session when finished.
 
-## Test
+## Build from source
+
+```bash
+git clone https://github.com/kenan-karimli/nearby-cast.git
+cd nearby-cast
+npm ci
+npm run tauri dev
+```
+
+Production builds:
+
+```bash
+npm run build
+cargo build --release --manifest-path src-tauri/Cargo.toml
+npm run tauri build
+```
+
+The Tauri build writes verified Linux packages under `src-tauri/target/release/bundle/`. The current release publishes `.deb` and `.rpm`; AppImage, Flatpak, and Snap are not advertised as release downloads because they were not verified in this release audit.
+
+Tests:
 
 ```bash
 npm test
@@ -41,8 +91,12 @@ cargo test --manifest-path src-tauri/Cargo.toml
 npm run test:all
 ```
 
-The virtual receiver suite does not replace testing with physical receivers. See [`docs/TESTING.md`](docs/TESTING.md) for protocol-specific limitations.
+The virtual receiver suite does not replace testing with physical receivers.
+
+## How it works
+
+NearbyCast discovers compatible receivers, selects an available protocol, captures the selected source, encodes the video, and streams it to the receiver.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
