@@ -18,7 +18,7 @@ use std::net::{IpAddr, UdpSocket};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 
 /// Parameters required to rebuild a cast session after an unexpected drop.
 #[derive(Debug, Clone)]
@@ -53,7 +53,7 @@ pub struct AppState {
 
 const CAST_STATUS_FILE: &str = "status.json";
 
-fn cast_launcher_path() -> Result<PathBuf, String> {
+fn cast_launcher_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if let Ok(path) = std::env::var("CAST_LAUNCHER") {
         let path = PathBuf::from(path);
         if path.is_file() {
@@ -68,6 +68,13 @@ fn cast_launcher_path() -> Result<PathBuf, String> {
         .ok_or_else(|| "Could not determine the development launcher path".to_string())?;
     if development_path.is_file() {
         return Ok(development_path);
+    }
+
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        let resource_path = resource_dir.join("cast_launcher.py");
+        if resource_path.is_file() {
+            return Ok(resource_path);
+        }
     }
 
     let installed_path = PathBuf::from("/usr/share/nearby-cast/cast_launcher.py");
@@ -994,7 +1001,7 @@ fn start_projection(
         }
     }
 
-    let script = match cast_launcher_path() {
+    let script = match cast_launcher_path(&app) {
         Ok(path) => path,
         Err(error) => {
             let _ = std::fs::remove_dir_all(&session_dir);
@@ -1442,7 +1449,10 @@ fn check_dependencies() -> serde_json::Value {
 
     let mut required_map = serde_json::Map::new();
     for tool in required {
-        required_map.insert(tool.to_string(), serde_json::Value::Bool(tool_present(tool)));
+        required_map.insert(
+            tool.to_string(),
+            serde_json::Value::Bool(tool_present(tool)),
+        );
     }
     let py_cast = Command::new("python3")
         .args(["-c", "import pychromecast"])
@@ -1453,7 +1463,10 @@ fn check_dependencies() -> serde_json::Value {
 
     let mut optional_map = serde_json::Map::new();
     for tool in optional {
-        optional_map.insert(tool.to_string(), serde_json::Value::Bool(tool_present(tool)));
+        optional_map.insert(
+            tool.to_string(),
+            serde_json::Value::Bool(tool_present(tool)),
+        );
     }
 
     // Flat keys kept for older UI callers; required tools also appear at top level.
@@ -1464,8 +1477,14 @@ fn check_dependencies() -> serde_json::Value {
     for (k, v) in optional_map.iter() {
         flat.insert(k.clone(), v.clone());
     }
-    flat.insert("required".to_string(), serde_json::Value::Object(required_map));
-    flat.insert("optional".to_string(), serde_json::Value::Object(optional_map));
+    flat.insert(
+        "required".to_string(),
+        serde_json::Value::Object(required_map),
+    );
+    flat.insert(
+        "optional".to_string(),
+        serde_json::Value::Object(optional_map),
+    );
     serde_json::Value::Object(flat)
 }
 

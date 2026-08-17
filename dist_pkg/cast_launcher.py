@@ -145,6 +145,34 @@ def stop_recorded_processes():
     except OSError:
         pass
 
+def stop_processes(wfr_proc, ffm_proc):
+    """Stop both pipeline children and reap them before removing session files."""
+    seen = set()
+    for process in (wfr_proc, ffm_proc):
+        if process is None or process.pid in seen:
+            continue
+        seen.add(process.pid)
+        if process.poll() is None:
+            try:
+                process.terminate()
+            except OSError:
+                pass
+    deadline = time.monotonic() + 3
+    for process in (wfr_proc, ffm_proc):
+        if process is None or process.pid in seen and process.poll() is not None:
+            try:
+                process.wait(timeout=max(0.0, deadline - time.monotonic()))
+            except (subprocess.TimeoutExpired, OSError):
+                pass
+    for process in (wfr_proc, ffm_proc):
+        if process is None or process.poll() is not None:
+            continue
+        try:
+            process.kill()
+            process.wait(timeout=1)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
 def cleanup(remove_status: bool = True):
     stop_recorded_processes()
     paths = [PROGRESS_FILE]
@@ -911,8 +939,7 @@ def main():
 
     def stop(sig=None, frame=None, preserve_status: bool = False):
         try:
-            wfr_proc.terminate()
-            ffm_proc.terminate()
+            stop_processes(wfr_proc, ffm_proc)
             server.shutdown()
         except Exception:
             pass
@@ -927,8 +954,17 @@ def main():
         stop(preserve_status=True)
         return
 
+    # Stop the other child when either side of the FIFO pipeline exits.
     try:
-        wfr_proc.wait()
+        while wfr_proc.poll() is None and ffm_proc.poll() is None:
+            time.sleep(0.2)
+        if wfr_proc.poll() is None or ffm_proc.poll() is None:
+            write_status(
+                "failed",
+                "Capture or encoder process exited unexpectedly",
+                metrics={**parse_ffmpeg_progress(), "encoder": SELECTED_ENCODER, "transport": TRANSPORT},
+            )
+        stop(preserve_status=True)
     except KeyboardInterrupt:
         stop()
 

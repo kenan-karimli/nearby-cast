@@ -87,4 +87,4 @@ cast_launcher.py 192.168.0.3 … NEARBY_CAST_LAB_MEDIA=1
 * Miracast needs Wi-Fi Direct capable hardware + FluxCast.
 * AirPlay FairPlay not implemented.
 * Flatpak python deps module uses build-time network (replace with pip-generator for Flathub).
-* This checkout is **not a git repository** (empty `.git` placeholder only).
+* Physical OneScreen playback was not available for verification in this audit; do not treat the virtual receiver results as hardware evidence.

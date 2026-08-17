@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import socket
 import threading
@@ -59,7 +60,13 @@ class Metrics:
     latency_p99_ms: Optional[float] = None
 
     def record_latency_ms(self, latency_ms: float, *, max_samples: int = 5000) -> None:
-        self.latency_samples_ms.append(float(latency_ms))
+        value = float(latency_ms)
+        # Receiver clocks are wall-clock synchronized in the local lab. A
+        # future or non-finite timestamp indicates a malformed marker (or a
+        # marker found accidentally in encoded media), not a real latency.
+        if not math.isfinite(value) or value < 0 or value > 60_000:
+            return
+        self.latency_samples_ms.append(value)
         if len(self.latency_samples_ms) > max_samples:
             self.latency_samples_ms = self.latency_samples_ms[-max_samples:]
         self._refresh_latency_percentiles()
