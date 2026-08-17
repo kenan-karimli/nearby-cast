@@ -39,10 +39,10 @@ The installer detects the distribution: Debian/Ubuntu uses `.deb`, Fedora/RHEL u
 The portable release is installed under `~/.local/share/nearby-cast` and linked as `~/.local/bin/nearby-cast`:
 
 ```bash
-curl -fL -o NearbyCast-0.1.0-x86_64.tar.gz \
-  https://github.com/kenan-karimli/nearby-cast/releases/download/v0.1.0/NearbyCast-0.1.0-x86_64.tar.gz
+curl -fL -o NearbyCast-0.1.0-x86_64-portable.tar.gz \
+  https://github.com/kenan-karimli/nearby-cast/releases/download/v0.1.0/NearbyCast-0.1.0-x86_64-portable.tar.gz
 mkdir -p ~/.local/share/nearby-cast ~/.local/bin
-tar -xzf NearbyCast-0.1.0-x86_64.tar.gz -C ~/.local/share
+tar -xzf NearbyCast-0.1.0-x86_64-portable.tar.gz -C ~/.local/share
 ln -sfn ~/.local/share/nearby-cast-0.1.0-x86_64/nearby-cast ~/.local/bin/nearby-cast
 ```
 
