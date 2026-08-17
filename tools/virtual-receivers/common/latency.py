@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 
-MAGIC = b"NCLAT1\0"  # 8 bytes
+MAGIC = b"NCLAT1\0\0"  # 8 bytes
 
 
 def now_ns() -> int:
