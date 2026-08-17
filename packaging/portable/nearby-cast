@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+export CAST_LAUNCHER="${CAST_LAUNCHER:-$ROOT_DIR/lib/cast_launcher.py}"
+export LD_LIBRARY_PATH="$ROOT_DIR/lib:$ROOT_DIR/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+exec "$ROOT_DIR/bin/nearby-cast-bin" "$@"

@@ -26,13 +26,27 @@ sudo dnf install ./NearbyCast-0.1.0-1.x86_64.rpm
 
 ### Quick install
 
-On supported x86_64 Debian-, Fedora-, or RPM-based systems:
+On supported x86_64 Linux systems:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kenan-karimli/nearby-cast/main/install.sh | bash
 ```
 
-The installer selects the latest published `.deb` or `.rpm`. It does not install development dependencies.
+The installer detects the distribution: Debian/Ubuntu uses `.deb`, Fedora/RHEL uses `.rpm`, and Arch or other Linux distributions use the portable `.tar.gz` release. It does not install development dependencies.
+
+### Arch Linux and other Linux
+
+The portable release is installed under `~/.local/share/nearby-cast` and linked as `~/.local/bin/nearby-cast`:
+
+```bash
+curl -fL -o NearbyCast-0.1.0-x86_64.tar.gz \
+  https://github.com/kenan-karimli/nearby-cast/releases/download/v0.1.0/NearbyCast-0.1.0-x86_64.tar.gz
+mkdir -p ~/.local/share/nearby-cast ~/.local/bin
+tar -xzf NearbyCast-0.1.0-x86_64.tar.gz -C ~/.local/share
+ln -sfn ~/.local/share/nearby-cast-0.1.0-x86_64/nearby-cast ~/.local/bin/nearby-cast
+```
+
+Ensure `~/.local/bin` is on `PATH` before running `nearby-cast`.
 
 ## Features
 
