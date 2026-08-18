@@ -121,7 +121,7 @@ The virtual receiver suite does not replace testing with physical receivers.
 
 NearbyCast discovers compatible receivers, selects an available protocol, captures the selected source, encodes the video, and streams it to the receiver.
 
-![GitHubCard repo card for kenan-karimli/nearby-cast](https://githubcard.com/g/5W3gSyDBrPsauSuS.svg)
+
 
 
 ## License
