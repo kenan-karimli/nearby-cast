@@ -1,10 +1,12 @@
-![GitHubCard repo card for kenan-karimli/nearby-cast](https://githubcard.com/g/5W3gSyDBrPsauSuS.svg)
+
 
 # NearbyCast
 
 ### Cast anything. Nearby. Open-source Linux desktop screen casting app.
 
 NearbyCast is a native Linux desktop application for discovering nearby receivers and casting a selected part of your screen.
+
+![GitHubCard repo card for kenan-karimli/nearby-cast](https://githubcard.com/g/5W3gSyDBrPsauSuS.svg)
 
 <p align="">
   <img src="./src/swappy-20260812_082317.png" width="48%" />
