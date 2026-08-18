@@ -1,3 +1,5 @@
+![GitHubCard repo card for kenan-karimli/nearby-cast](https://githubcard.com/g/5W3gSyDBrPsauSuS.svg)
+
 # NearbyCast
 
 ### Cast anything. Nearby. Open-source Linux desktop screen casting app.
