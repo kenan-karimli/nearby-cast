@@ -1,1 +1,88 @@
-theme: jekyll-theme-slate
+title: NearbyCast
+description: Open-source screen casting for Linux
+url: "https://kenan-karimli.github.io"
+baseurl: "/nearby-cast"
+
+repository: kenan-karimli/nearby-cast
+
+lang: en
+timezone: Asia/Baku
+
+theme: jekyll-theme-minimal
+
+logo: ./logo.png
+favicon: ./logo.png
+
+author:
+  name: Kenan Karimli
+  url: https://github.com/kenan-karimli
+
+github:
+  is_project_page: true
+  repository_url: https://github.com/kenan-karimli/nearby-cast
+
+show_downloads: true
+
+markdown: kramdown
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+highlighter: rouge
+
+permalink: pretty
+
+collections:
+  docs:
+    output: true
+    permalink: /docs/:path/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+  - scope:
+      path: "docs"
+    values:
+      layout: default
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - scripts
+  - package.json
+  - package-lock.json
+
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  blanklines: false
+
+seo:
+  type: SoftwareApplication
+  name: NearbyCast
+  description: Open-source Linux desktop screen casting application
+  image: /assets/img/og-image.png
+
+social:
+  name: NearbyCast
+  links:
+    - https://github.com/kenan-karimli/nearby-cast
