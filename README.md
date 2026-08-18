@@ -1,6 +1,6 @@
 # NearbyCast
 
-### Cast anything. Nearby. Open source.
+### Cast anything. Nearby. Open-source Linux desktop screen casting app.
 
 NearbyCast is a native Linux desktop application for discovering nearby receivers and casting a selected part of your screen.
 
