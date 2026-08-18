@@ -1,3 +1,8 @@
+---
+layout: default
+title: Nearby Cast Wiki
+---
+
 <html><head></head><body><h1>Nearby Cast — Project Wiki</h1>
 <blockquote>
 <p><strong>Cast anything. Nearby.</strong> — Open-source Linux desktop screen casting app.</p>
