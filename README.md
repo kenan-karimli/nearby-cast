@@ -4,6 +4,11 @@
 
 NearbyCast is a native Linux desktop application for discovering nearby receivers and casting a selected part of your screen.
 
+![Açıqlama yazısı](./swappy-20260812_082317.png)
+![Açıqlama yazısı](./swappy-20260812_082329.png)
+
+
+
 [Download v0.1.0](https://github.com/kenan-karimli/nearby-cast/releases/tag/v0.1.0) · [Build from source](#build-from-source) · [Report an issue](https://github.com/kenan-karimli/nearby-cast/issues)
 
 ## Download
