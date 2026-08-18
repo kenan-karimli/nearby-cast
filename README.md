@@ -11,8 +11,8 @@ NearbyCast is a native Linux desktop application for discovering nearby receiver
   </tr>
 </table>
 <p align="center">
-  <img src="./src/swappy-20260812_082317.png" width="48%" />
-  <img src="./src/swappy-20260812_082329.png" width="48%" />
+  <img src="./src/swappy-20260812_082317.png" width="100%" />
+  <img src="./src/swappy-20260812_082329.png" width="100%" />
 </p>
 
 
